@@ -40,7 +40,7 @@ export class Game {
           console.log(this.foods.length, this.snakes.length);
           console.log(this.snakes.length - this.foods.length);
 
-          if (this.snakes.length - this.foods.length <= 1) return;
+          if (this.snakes.length - this.foods.length <= 1 && this.snakes.length !== 1) return;
 
           const newFood = new Food(this.getFreePosition());
           this.foods.push(newFood);

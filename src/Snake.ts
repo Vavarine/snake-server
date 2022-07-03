@@ -7,7 +7,7 @@ export class Snake {
   x: number;
   y: number;
   dir: Dir;
-  body: { x: number; y: number }[];
+  body: { x: number; y: number; dir: Dir }[];
 
   constructor(x: number, y: number, id: string) {
     this.id = id;
@@ -15,9 +15,11 @@ export class Snake {
     this.y = y;
     this.dir = "right";
     this.body = [
-      { x: this.x, y: this.y },
-      { x: this.x - 1, y: this.y },
-      { x: this.x - 2, y: this.y },
+      { x: this.x, y: this.y, dir: this.dir },
+      { x: this.x - 1, y: this.y, dir: this.dir },
+      { x: this.x - 2, y: this.y, dir: this.dir },
+      { x: this.x - 3, y: this.y, dir: this.dir },
+      { x: this.x - 4, y: this.y, dir: this.dir },
     ];
   }
 
@@ -39,8 +41,9 @@ export class Snake {
     if (this.x > width - 1) this.x = 0;
     if (this.y > height - 1) this.y = 0;
 
-    this.body.unshift({ x: this.x, y: this.y });
+    this.body.unshift({ x: this.x, y: this.y, dir: this.dir });
     this.body.pop();
+    this.body[this.body.length - 1].dir = this.body[this.body.length - 2].dir;
   }
 
   changeDir(dir: Dir) {
@@ -48,7 +51,7 @@ export class Snake {
   }
 
   grow() {
-    this.body.push({ x: this.x, y: this.y });
+    this.body.push({ x: this.x, y: this.y, dir: this.dir });
   }
 
   getState() {
