@@ -7,13 +7,18 @@ export class Snake {
   x: number;
   y: number;
   dir: Dir;
-  body: { x: number; y: number; dir: Dir }[];
+  body: { x: number; y: number; dir: Dir; hasFood?: boolean }[];
+  moved: boolean = false;
+  color: string;
+  nickname: string;
 
-  constructor(x: number, y: number, id: string) {
+  constructor(x: number, y: number, id: string, color: string, nickname: string) {
     this.id = id;
     this.x = x;
     this.y = y;
     this.dir = "right";
+    this.color = color;
+    this.nickname = nickname;
     this.body = [
       { x: this.x, y: this.y, dir: this.dir },
       { x: this.x - 1, y: this.y, dir: this.dir },
@@ -44,13 +49,23 @@ export class Snake {
     this.body.unshift({ x: this.x, y: this.y, dir: this.dir });
     this.body.pop();
     this.body[this.body.length - 1].dir = this.body[this.body.length - 2].dir;
+    this.moved = false;
   }
 
   changeDir(dir: Dir) {
+    const isDirOpposite =
+      (this.dir === "up" && dir === "down") ||
+      (this.dir === "down" && dir === "up") ||
+      (this.dir === "left" && dir === "right") ||
+      (this.dir === "right" && dir === "left");
+
+    if (this.moved || isDirOpposite) return;
     this.dir = dir;
+    this.moved = true;
   }
 
   grow() {
+    this.body[0].hasFood = true;
     this.body.push({ x: this.x, y: this.y, dir: this.dir });
   }
 
@@ -61,6 +76,8 @@ export class Snake {
       y: this.y,
       dir: this.dir,
       body: this.body,
+      color: this.color,
+      nickname: this.nickname,
     };
   }
 }

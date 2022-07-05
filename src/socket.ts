@@ -1,7 +1,7 @@
 import { Server } from "socket.io";
 import http from "http";
 import { logInfo } from "./utils/log";
-import { Snake } from "./Snake";
+
 import { Game } from "./Game";
 
 export const socket = (server: http.Server) => {
@@ -11,8 +11,14 @@ export const socket = (server: http.Server) => {
   io.on("connection", (socket) => {
     logInfo("socket", `${socket.id} connected`);
 
-    socket.on("join", () => {
-      game.addSnake(socket.id);
+    socket.on("join", (data) => {
+      const alreadyJoined = game.snakes.find((s) => s.id === socket.id);
+
+      if (alreadyJoined || !data?.nickname || !data?.color) return;
+
+      const { nickname, color } = data;
+
+      game.addSnake(socket.id, nickname, color);
 
       socket.emit("joined", game.getState());
       io.emit("update", game.getState());
@@ -33,6 +39,10 @@ export const socket = (server: http.Server) => {
       logInfo("socket", `${socket.id} disconnected`);
     });
   });
+
+  game.onGameOver = (id) => {
+    io.to(id).emit("gameOver", { id });
+  };
 
   game.onUpdate = () => {
     io.emit("update", game.getState());

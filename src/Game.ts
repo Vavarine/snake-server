@@ -1,5 +1,6 @@
 import { Food } from "./Food";
 import { Dir, Snake } from "./Snake";
+import { logInfo } from "./utils/log";
 
 export type GameSize = {
   width: number;
@@ -13,6 +14,7 @@ export class Game {
   size: GameSize;
 
   onUpdate: () => void;
+  onGameOver: (socketId: string) => void;
 
   constructor(height: number, width: number) {
     this.size = { height, width };
@@ -33,22 +35,20 @@ export class Game {
     this.snakes.forEach((snake) => {
       snake.move(this.size);
 
+      if (this.snakeCollided(snake) || this.snakeSelfCollided(snake)) {
+        this.removeSnake(snake.id, true);
+      }
+
       this.foods.forEach((food) => {
         if (this.foodGotEatenBySnake(food, snake)) {
           this.foods = this.foods.filter((f) => f !== food);
 
-          console.log(this.foods.length, this.snakes.length);
-          console.log(this.snakes.length - this.foods.length);
+          snake.grow();
 
-          if (this.snakes.length - this.foods.length <= 1 && this.snakes.length !== 1) return;
+          if (this.snakes.length - this.foods.length <= 1 && this.foods.length !== 0) return;
 
           const newFood = new Food(this.getFreePosition());
           this.foods.push(newFood);
-          snake.grow();
-        }
-
-        if (this.snakeCollided(snake)) {
-          this.removeSnake(snake.id);
         }
       });
     });
@@ -58,6 +58,14 @@ export class Game {
 
   foodGotEatenBySnake(food: Food, snake: Snake) {
     return food.x === snake.x && food.y === snake.y;
+  }
+
+  snakeSelfCollided(snake: Snake) {
+    return snake.body.some((body, i) => {
+      if (i === 0) return false;
+
+      return snake.x === body.x && snake.y === body.y;
+    });
   }
 
   snakeCollided(snake: Snake) {
@@ -70,9 +78,9 @@ export class Game {
     );
   }
 
-  addSnake(id: string) {
+  addSnake(id: string, nickname: string, color: string) {
     const { x, y } = this.getFreePosition();
-    const snake = new Snake(x, y, id);
+    const snake = new Snake(x, y, id, color, nickname);
 
     this.snakes.push(snake);
 
@@ -87,8 +95,23 @@ export class Game {
     snake?.changeDir(dir);
   }
 
-  removeSnake(id: string) {
-    this.snakes = this.snakes.filter((snake) => snake.id !== id);
+  removeSnake(id: string, addFood?: boolean) {
+    const snakeToRemove = this.snakes.find((s) => s.id === id);
+
+    this.onGameOver?.(id);
+
+    addFood &&
+      snakeToRemove?.body.forEach((body, i) => {
+        if (i === 0) return;
+        const addFood = Math.random() < 0.4;
+
+        if (addFood) {
+          const food = new Food({ x: body.x, y: body.y });
+          this.foods.push(food);
+        }
+      });
+
+    this.snakes = this.snakes.filter((s) => s !== snakeToRemove);
   }
 
   getFreePosition(): { x: number; y: number } {
