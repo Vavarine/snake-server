@@ -4,8 +4,11 @@ import { logInfo } from "./utils/log";
 
 import { Game } from "./Game";
 
+const GAME_COLS = 30;
+const GAME_ROWS = 50;
+
 export const socket = (server: http.Server) => {
-  const game = new Game(30, 50);
+  const game = new Game(GAME_COLS, GAME_ROWS);
   const io = new Server(server);
 
   io.on("connection", (socket) => {
